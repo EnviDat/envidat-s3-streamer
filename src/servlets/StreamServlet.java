@@ -2,8 +2,12 @@ package servlets;
 
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -18,13 +22,10 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet("/StreamServlet")
 public class StreamServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
+	
+	Map<String,String> config;
+	PathCollector collector;
 
-    /**
-     * Default constructor. 
-     */
-    public StreamServlet() {
-        // TODO Auto-generated constructor stub
-    }
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
@@ -32,6 +33,15 @@ public class StreamServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {		
 		
 	    System.out.println("*** Requested Paths ***");  
+	    
+	    // Read config
+	    this.config = readConfig();
+		
+	    // Create collector
+	    int maxIterations = Integer.parseInt(config.get("MAX_ITER"));
+	    int maxKeys = Integer.parseInt(config.get("MAX_KEYS"));
+	    this.collector = new PathCollector(maxIterations, maxKeys, config.get("PATH_BASE_URL"), config.get("REQUEST_BASE_URL"));
+
 	    
 	    // Get parameter and return error if not present
 	    String prefix = request.getParameter("prefix");
@@ -42,14 +52,15 @@ public class StreamServlet extends HttpServlet {
 	    	System.out.println(" - prefix = " + prefix);  
 	    
 	        try {
-	            String outputResult = PathCollector.getPaths(prefix);
+	    	    // collect the paths
+	            String outputResult = this.collector.getPaths(prefix);
 	            
 	    	    if (outputResult == null || outputResult.trim().isEmpty()){
 	    	        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Parameter 'prefix' wrong, no content");
 	    	    } 
 
 		    	// Build the response
-				String fileName = "envidatS3paths";
+				String fileName = config.getOrDefault("OUTPUT_FILE_NAME", "envidatS3paths");
 		        response.setContentType("text/plain");
 		        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + ".txt\"");
 
@@ -73,6 +84,27 @@ public class StreamServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		doGet(request, response);
+	}
+	
+	protected Map<String,String> readConfig(){
+		Map<String,String> config = new HashMap<String, String>();
+		
+		try {
+			Properties properties = new Properties();
+			properties.load(getServletContext().getResourceAsStream("/WEB-INF/servlet.properties"));
+			
+			//properties.load(input);
+			properties.forEach((key, value) -> config.put(key.toString(), value.toString()));
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	    config.forEach((key, value) -> System.out.println("Key : " + key + ", Value : " + value));
+		
+		return config;
+		
 	}
 
 }

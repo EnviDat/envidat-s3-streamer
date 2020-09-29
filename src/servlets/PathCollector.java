@@ -12,43 +12,22 @@ import javax.xml.stream.events.XMLEvent;
 
 
 public class PathCollector {
-
-	private static class ListObjectsResponse {
+	
+	int maxIterations;
+	int maxKeys;
+	String pathBaseUrl;
+	String baseUrl;
+	
+	public PathCollector(int _maxIterations, int _maxKeys, String _pathBaseUrl, String _baseUrl) {
+		super();
 		
-		@Override
-		public String toString() {
-			String shortenedData = "";
-			if (!(data == null || data.trim().isEmpty())) {
-				shortenedData = data.substring(0, Math.min(data.length(), 20)) + "...";
-			}
-			return "ListObjectsResponse [ token=" + token + ", data=" + shortenedData + "]";
-		}
-		
-		private String data;
-		private String token;
-		
-		public String getToken() {
-			return token;
-		}
-		public void setToken(String token) {
-			this.token = token;
-		}
-		public String getData() {
-			return data;
-		}
-		public void setData(String data) {
-			this.data = data;
-		}
-		
+		this.maxIterations = _maxIterations;
+		this.maxKeys = _maxKeys;
+		this.pathBaseUrl = _pathBaseUrl;
+		this.baseUrl = _baseUrl;
 	}
 	
-	public static String getPaths(String prefix) {
-		
-		int MAX_ITER = 100;
-		
-		int maxKeys = 100000;
-		String pathBaseUrl = "https://envicloud.os.zhdk.cloud.switch.ch/";
-		String baseUrl = "https://envicloud.os.zhdk.cloud.switch.ch/";
+	public String getPaths(String prefix) {
 		
 		String pathsText = "";
 
@@ -57,10 +36,10 @@ public class PathCollector {
 		
 		String token = null;
 		
-		while (doContinue && iterations< MAX_ITER) {
+		while (doContinue && iterations < this.maxIterations) {
 			
 			System.out.println(" -------- Iteration " + iterations + " --------");
-			ListObjectsResponse response = requestData(pathBaseUrl, baseUrl, prefix, maxKeys, token);
+			ListObjectsResponse response = requestData(this.pathBaseUrl, this.baseUrl, prefix, this.maxKeys, token);
 			
 			pathsText += response.getData();
 			token = response.getToken();
@@ -75,7 +54,7 @@ public class PathCollector {
 		
 		return(pathsText);
 	}
-	
+
 	public static ListObjectsResponse requestData(String pathBaseUrl, String baseUrl, String prefix, int maxKeys, String startAfter) {
 		
 		String requestUrl = baseUrl + "?list-type=2&prefix=" + prefix + "&max-keys=" + maxKeys;
@@ -144,6 +123,35 @@ public class PathCollector {
 		
 		System.out.println("- Response: " + response.toString());
 		return(response);
+	}
+	
+	private static class ListObjectsResponse {
+		
+		@Override
+		public String toString() {
+			String shortenedData = "";
+			if (!(data == null || data.trim().isEmpty())) {
+				shortenedData = data.substring(0, Math.min(data.length(), 20)) + "...";
+			}
+			return "ListObjectsResponse [ token=" + token + ", data=" + shortenedData + "]";
+		}
+		
+		private String data;
+		private String token;
+		
+		public String getToken() {
+			return token;
+		}
+		public void setToken(String token) {
+			this.token = token;
+		}
+		public String getData() {
+			return data;
+		}
+		public void setData(String data) {
+			this.data = data;
+		}
+		
 	}
  
 }
