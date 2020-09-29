@@ -29,32 +29,42 @@ public class StreamServlet extends HttpServlet {
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		//response.getWriter().append("Served at: ").append(request.getContextPath());
-		
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {		
 		
 	    System.out.println("*** Requested Paths ***");  
 	    
-	    //String prefix = request.getParameter("prefix");
-	    //if (!(prefix == null || prefix.trim().isEmpty())){
-	    //	System.out.println(" - prefix = " + prefix);  
-	    //}
+	    // Get parameter and return error if not present
+	    String prefix = request.getParameter("prefix");
+	    if (prefix == null || prefix.trim().isEmpty()){
+	        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Parameter 'prefix' missing or empty");
+	    } else {
+	    	
+	    	System.out.println(" - prefix = " + prefix);  
 	    
-		String fileName = "my_file";
-        response.setContentType("text/plain");
-        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + ".txt\"");
-        try {
-            ServletOutputStream outputStream = response.getOutputStream();
-            String outputResult = PathCollector.getPaths();
-            
-            //System.out.println("\n*** Result: \n" + outputResult);  
-            
-            outputStream.write(outputResult.getBytes());
-            outputStream.flush();
-            outputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+	        try {
+	            String outputResult = PathCollector.getPaths(prefix);
+	            
+	    	    if (outputResult == null || outputResult.trim().isEmpty()){
+	    	        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Parameter 'prefix' wrong, no content");
+	    	    } 
+
+		    	// Build the response
+				String fileName = "envidatS3paths";
+		        response.setContentType("text/plain");
+		        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + ".txt\"");
+
+		        // Write contents to the response
+	            ServletOutputStream outputStream = response.getOutputStream();
+	            outputStream.write(outputResult.getBytes());
+	            outputStream.flush();
+	            outputStream.close();
+	            
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Exception got during request, please contac the administrator: " + e.toString());
+	        }
+	    }
+        System.out.println("\n*** FINISHED ***");   
 	}
 
 	/**

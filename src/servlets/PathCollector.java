@@ -42,13 +42,11 @@ public class PathCollector {
 		
 	}
 	
-	public static String getPaths() {
+	public static String getPaths(String prefix) {
 		
-		int MAX_ITER = 30;
+		int MAX_ITER = 100;
 		
-		//https://envicloud.os.zhdk.cloud.switch.ch/?prefix=chelsa/chelsa_V1/&max-keys=1000
-		String prefix = "chelsa/chelsa_V1/";
-		int maxKeys = 5000;
+		int maxKeys = 100000;
 		String pathBaseUrl = "https://envicloud.os.zhdk.cloud.switch.ch/";
 		String baseUrl = "https://envicloud.os.zhdk.cloud.switch.ch/";
 		
